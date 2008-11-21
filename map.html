@@ -1,0 +1,225 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+<title>Rideshare pushpins for {{place|escape}} {{people|escape}}</title>
+<script
+src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=ABQIAAAAK66Qp-URZDoyIK3CA-TFxxSEpqyB52ri6CozCxC1N-C0Lqi2RRQJSmyqPLmyCHafqqVoApbOZ8Zjew" type="text/javascript"></script>
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+<link rel="icon" href="favicon.ico" type="image/x-icon">
+</head>
+<body onunload="GUnload()">
+<h2>Add a pushpin so other <font color="blue">{{place|escape}}</font> {{people|escape}} know where you live </h2>
+<table>
+<tr><td>
+<p>First, click on the map where you live. You can drag your pushpin or
+the map around before you complete the third step.</p>
+<p>Second, in the supplied bubble, fill in your first name (and maybe your initial).</p>
+<p>Third, click the "submit" button if everything looks right. If not,
+start over by reloading the page.  </p>
+
+<p>Now you are ready to explore the pushpins: roll your mouse slowly over existing pushpins
+and you will see where others live and may be able to rideshare.  
+You may remove your pushpin by right-clicking on it.</p>
+<p><tt>{{contact}}</tt></p>
+
+<a href="/add_group">Add a new group</a>
+</td>
+<td>
+
+<!--div id="map" style="width: 900px; height: 700px"></div-->
+<div id="map" style="width: 700px; height: 500px"></div>
+<!--a href="store.htm">Back to the tutorial page</a-->
+
+
+</td>
+</tr>
+</table>
+<noscript><b>JavaScript must be enabled in order for you to use Google Maps.</b> 
+However, it seems JavaScript is either disabled or not supported by your browser. 
+To view Google Maps, enable JavaScript by changing your browser options, and then 
+try again.
+</noscript>
+
+
+<script type="text/javascript">
+//<![CDATA[
+
+/*This script is based on the work of Mike Williams' example_store.htm
+who has been extremely helpful and whose great tutorial are at the link
+*/  http://www.econym.demon.co.uk/googlemaps/ 
+
+var myArray = new Array();
+var noMore = false;
+var noMoreDel = false;
+
+if (GBrowserIsCompatible()) {
+
+var lastmarker;
+var markerID;
+var markerDetails;
+var myEventListener;
+var myEventMapListener;
+var iwform = 'Enter your name:<br>'
++ '<form onsubmit="process(this); return false" action="#">'
++ '  <input type="text" name="data" size="31" maxlength="31"/>'
++ '  <input type="submit" value="Submit" />'
++ '<\/form>';
+
+// == creates a draggable marker with an input form ==
+function createInputMarker(point,ID) {
+if(!noMore){
+var marker = new GMarker(point,{draggable:true, icon:G_START_ICON});
+marker.ID = ID + 0;
+GEvent.addListener(marker, "click", function() {
+lastmarker = marker;
+marker.openInfoWindowHtml(iwform);
+});
+noMore = true;
+map.addOverlay(marker);
+marker.openInfoWindowHtml(iwform);
+lastmarker=marker;
+return marker;
+}
+}
+
+// == removes a normal marker with an input form ==
+function processdel(form) {
+// == obtain the data
+var url = "details.txt?Action=del&ID=" +markerID+"&place={{place_id}}";
+// GLog.write("About to send "+url+ " to the server"); 
+
+// ===== send the data to the server
+GDownloadUrl(url, function(doc) {    });  
+
+// == remove the input marker and replace it with a completed marker
+map.closeInfoWindow();
+map.removeOverlay(lastmarker);
+GEvent.removeListener(myEventListener);
+GEvent.removeListener(myEventMapListener);
+alert("Your pushpin has been removed.");
+
+}
+
+// == creates a "normal" marker
+function createMarker(point,text,ID) { 
+markerOptions = {title:text};
+var marker = new GMarker(point,markerOptions);
+marker.ID = ID;
+myEventMapListener = new GEvent.addListener(map, "singlerightclick", function(a,b,overlay) {
+  if(overlay){
+    if(overlay instanceof GMarker){
+      GEvent.trigger(overlay,"SingleRightClick");
+    }
+  }
+});
+myEventListener = new GEvent.addListener(marker, "click", function() {
+if(!noMoreDel){
+markerID = marker.ID;
+markerDetails = text;
+
+var delform = text + '<br>'
++ '<form onsubmit="processdel(this); return false" action="#">'
++ '  <input type="submit" value="Delete" />'
++ '<\/form>';
+
+marker.openInfoWindowHtml(delform);
+noMoreDel = true;
+lastmarker = marker;
+}
+});
+map.addOverlay(marker);
+return marker;
+}
+
+// == Display the map, with some controls and set the initial location 
+var map = new GMap2(document.getElementById("map"),{draggableCursor:"default"});
+//map.addControl(new GLargeMapControl());
+var start = new GLatLng({{center_lat}},{{center_lon}});
+name = "{{place|addslashes}}";
+map.setCenter(start,{{map_zoom}});
+var startmarker = new GMarker(start,{draggable:true, autoPan:false, title:name});
+map.addOverlay(startmarker);
+startmarker.setImage("http://maps.google.com/mapfiles/dd-end.png");
+
+// == Listen for map click and add an input marker
+GEvent.addListener(map,"click",function(overlay,point){
+if (!overlay) {
+createInputMarker(point,0);
+}
+});
+
+function process(form) {
+// == obtain the data
+var ID = myArray.length + 1;
+var details = form.data.value;
+var lat = lastmarker.getPoint().lat();
+var lng = lastmarker.getPoint().lng();
+var url = "details.txt?Action=add&ID=" +ID+ "&lat=" +lat+ "&lng=" +lng+ "&details="+details+"&place={{place_id}}";
+//GLog.write("About to send "+url+ " to the server"); 
+
+// ===== send the data to the server
+GDownloadUrl(url, function(doc) { 
+	var marker = createMarker(lastmarker.getPoint(),details,doc);
+});  
+
+// == remove the input marker and replace it with a completed marker
+map.closeInfoWindow();
+map.removeOverlay(lastmarker);
+// GEvent.trigger(marker,"click");
+alert("Your information has been processed. You may hover over pushpins to see who others are.");
+
+}
+
+// === Define the function thats going to read the stored data ===
+readData = function(doc) {
+// === split the document into lines ===
+lines = doc.split("\n");
+for (var i=0; i<lines.length; i++) {
+if (lines[i].length > 1) {
+// === split each line into parts separated by Tab and use the contents ===
+parts = lines[i].split(String.fromCharCode(9));
+var ID  = parts[0];
+var lat = parseFloat(parts[2]);
+var lng = parseFloat(parts[3]);
+var details = parts[4];
+var point = new GLatLng(lat,lng);
+myArray[i] = new Array(lat,lng,details,point,ID);
+// create the marker
+// var marker = createMarker(point,details,ID);
+}
+}
+// create the marker
+for (var j=0; j<myArray.length; j++) {
+var alat = myArray[j][0];
+var alng = myArray[j][1];
+var adetails = myArray[j][2];
+var apoint = myArray[j][3];
+var ID = myArray[j][4];
+if(!isNaN(alat+alng)){
+// create the marker
+var marker = createMarker(apoint,adetails,ID);
+}
+}
+}          
+// === read data entered by previous users ===
+GDownloadUrl("details.txt?place={{place_id}}", readData);      
+
+}
+
+// display a warning if the browser was not compatible
+else {
+alert("Sorry, the Google Maps API is not compatible with this browser");
+}
+
+// This Javascript is based on code provided by the
+// Blackpool Community Church Javascript Team
+// http://www.commchurch.freeserve.co.uk/   
+// http://econym.googlepages.com/index.htm
+
+//]]>
+</script>
+
+</body>
+
+</html>
