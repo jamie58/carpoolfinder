@@ -22,6 +22,7 @@ start over by reloading the page.  </p>
 and you will see where others live and may be able to rideshare.  
 You may remove your pushpin by right-clicking on it.</p>
 <p><tt>{{contact}}</tt></p>
+<p><strong>{{moreinfo|escape}}</strong></p>
 
 <a href="/add_group">Add a new group</a>
 </td>
@@ -134,8 +135,8 @@ return marker;
 
 // == Display the map, with some controls and set the initial location 
 var map = new GMap2(document.getElementById("map"),{draggableCursor:"default"});
-//map.addControl(new GLargeMapControl());
-var start = new GLatLng({{center_lat}},{{center_lon}});
+map.addControl(new GLargeMapControl());
+var start = new GLatLng({{center_lat}},{{center_lng}});
 name = "{{place|addslashes}}";
 map.setCenter(start,{{map_zoom}});
 var startmarker = new GMarker(start,{draggable:true, autoPan:false, title:name});
