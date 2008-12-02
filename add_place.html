@@ -13,11 +13,12 @@
       <h2>Promote ride sharing within your organization or group.</h2>
     </center>
 
+    <p> Enter your groups information:<br>
     <table>
       <tr><td>
           <p>First, <strong>drag the pushpin</strong> to its desired location,
-              <strong>reposition the map</strong> by dragging it around or panning with arrow
-                  buttons on the map, and <strong>zoom in the map</strong> by clicking the "+" or by double
+          <strong>reposition the map</strong> by dragging it around or panning with arrow
+          buttons on the map, and <strong>zoom in the map</strong> by clicking the "+" or by double
           clicking on the map near where you want the map center to be. You may have to reposition the pushpin and the
           map, and zoom the map, in <font color="blue">repeated cycles</font> until you get the result
           you desire.
@@ -29,7 +30,7 @@
           <p>Third, click the "submit" button if everything looks right. If not,
           start over by reloading the page.  </p>
 
-          <p>*****{{moreinfo|escape}} More information needs to be supplied about the admin's
+          <p>*****More information needs to be supplied about the admin's
           tasks.*****
           </p>
           <p><tt>schott DOT bee are eye eh en AT gee em ae eye el DOT com</tt></p>
@@ -54,95 +55,76 @@
     <script type="text/javascript">
       //<![CDATA[
 
-      /*This script is based on the work of Mike Williams' example_store.htm
+    /*This script is based on the work of Mike Williams' example_store.htm
       who has been extremely helpful and whose great tutorial are at the link
-      */  http://www.econym.demon.co.uk/googlemaps/ 
+      http://www.econym.demon.co.uk/googlemaps/ 
+    */
 
-      if (GBrowserIsCompatible()) {
+    if (GBrowserIsCompatible()) {
 
-        // == Display the map, with some controls and set the initial location 
-        var map = new GMap2(document.getElementById("map"),{draggableCursor:"default"});
-        map.addControl(new GLargeMapControl());
-        map.setCenter(new GLatLng(24.21,-41.48), 2);
+      // == Display the map, with some controls and set the initial location 
+      var map = new GMap2(document.getElementById("map"),{draggableCursor:"default"});
+      map.addControl(new GLargeMapControl());
+      map.setCenter(new GLatLng(24.21,-41.48), 2);
 
-        var markerOptions = {title:"Drag and zoom the map and reposition me, before clicking on me", draggable:true};
-        var marker = new GMarker(map.getCenter(),markerOptions);
+      var markerOptions = {title:"Drag and zoom the map and reposition me, before clicking on me", draggable:true};
+      var marker = new GMarker(map.getCenter(),markerOptions);
 
-        var myEventListener;
-        var myEventMapListener;
-
-        var iwform = 'Enter your group\'s information:<br>'
-        + '<form onsubmit="process(this); return false" action="#">'
-          + '<br />'
-          + 'Place'
-          + '  <input type="text" name="place" value="Civic Center" size="31" maxlength="31"/>'
-          + '<br />'
-          + 'People'
-          + '  <input type="text" name="people" value="pedalers" size="31" maxlength="31"/>'
-          + '<br />'
-          + 'Contact'
-          + '  <input type="text" name="contact" value="schott DOT bee are eye eh en AT gee em ae eye el DOT com" size="81" maxlength="31"/>'
-          + '<br />'
-          + 'More information'
-          + '  <input type="textarea" name="moreinfo"/>'
-          + '  <input type="hidden" name="center_lat" value="' 
-          +  map.getCenter().lat() + '"/>'
-          + '  <input type="hidden" name="center_lng" value="' 
-          +  map.getCenter().lng() + '"/>'
-          + '  <input type="hidden" name="zoom" value="' 
-          + map.getZoom() + '"/>'
-          + '  <input type="hidden" name="marker_lat" value="' 
-          + marker.getPoint().lat() + '"/>'
-          + '  <input type="hidden" name="marker_lng" value="' 
-          + marker.getPoint().lng() + '"/>'          
-          + '  <input type="submit" value="Submit" />'
-          + '<\/form>';
-
-              map.addOverlay(marker);
-              myEventListener = new GEvent.addListener(marker, "click", function() {
-                marker.openInfoWindowHtml(iwform);
-              });
-              function process(form) {
-                // == obtain the data
-                var center_lat = map.getCenter().lat();
-                var center_lng = map.getCenter().lng();
-                var zoom = map.getZoom();
-                var place = form.place.value;
-                var people = form.people.value;
-                var contact = form.contact.value;
-                var moreinfo = form.moreinfo.value;
-                var lat = marker.getPoint().lat();
-                var lng = marker.getPoint().lng();
-                var url = "center_lat=" +center_lat+ "&center_lng=" + center_lng+ "&zoom=" +zoom+ "&people=" +people+ "&contact=" +contact+ "&moreinfo=" + moreinfo;
-                url += "lat=" +lat+ "&lng=" +lng+ "&place=" + place;
-                // GLog.write("About to send "+url+ " to the server");
-                GDownloadUrl(
-                    "maps.py",
-                    function(doc){},
-                    url
-                    );
+      var myEventListener;
 
 
-                map.closeInfoWindow();
-                alert("Your information has been processed. You may want to start by adding your own pushpin after you get to your group's map.");
+      var iwform = 'Enter your group\'s information:<br>'
+        + '<form method="POST" onsubmit="return process(this)" action="add_place">'
+        + '<br />'
+        + 'Group Name or Initials'
+        + '  <input type="text" name="place" value="Civic Group" size="31" maxlength="31"/>'
+        + '<br />'
+        + 'People'
+        + '  <input type="text" name="people" value="do-gooders" size="31" maxlength="31"/>'
+        + '<br />'
+        + 'Contact'
+        + '  <input type="text" name="contact" value="schott DOT bee are eye eh en AT gee em ae eye el DOT com" size="81" maxlength="31"/>'
+        + '<br />'
+        + 'More information'
+        + '  <input type="textarea" name="moreinfo"/>'
+        + '  <input type="hidden" name="center_lat"/>'
+        + '  <input type="hidden" name="center_lng"/>'
+        + '  <input type="hidden" name="zoom"/>'
+        + '  <input type="hidden" name="marker_lat"/>'
+        + '  <input type="hidden" name="marker_lng"/>'          
+        + '  <input type="submit" value="Submit" />'
+        + '<\/form>';
 
-              }
+      map.addOverlay(marker);
+      myEventListener = new GEvent.addListener(marker, "click", function() {
+          marker.openInfoWindowHtml(iwform);
+          });
+      function process(form) {
+        // == populate map data
+        form.center_lat.value = String(map.getCenter().lat());
+        form.center_lng.value = String(map.getCenter().lng());
+        form.zoom.value = String(map.getZoom());
+        form.marker_lat.value = String(marker.getPoint().lat());
+        form.marker_lng.value = String(marker.getPoint().lng());
+        GEvent.removeListener(myEventListener);
+
+        return true;
       }
 
+        // display a warning if the browser was not compatible
+      } else {
+        alert("Sorry, the Google Maps API is not compatible with this browser");
+      }
 
-// display a warning if the browser was not compatible
-else {
-  alert("Sorry, the Google Maps API is not compatible with this browser");
-}
+      // This Javascript is based on code provided by the
+      // Blackpool Community Church Javascript Team
+      // http://www.commchurch.freeserve.co.uk/   
+      // http://econym.googlepages.com/index.htm
 
-// This Javascript is based on code provided by the
-// Blackpool Community Church Javascript Team
-// http://www.commchurch.freeserve.co.uk/   
-// http://econym.googlepages.com/index.htm
 
-//]]>
-</script>
-
-    </body>
+      //]]>
+    </script>
+    </p>
+  </body>
 
 </html>
