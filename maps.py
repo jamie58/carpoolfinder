@@ -25,6 +25,22 @@ class Pin(db.Model):
     lng = db.FloatProperty()
     name = db.StringProperty()
 
+def make_new_map(place_id,self):
+      user = users.get_current_user()
+      if user:    #send to add_place.html
+          place= Group(key_name=place_id)
+          place.place = place_id
+          place.user = user
+          place.put()
+          key = db.Key.from_path("Group", place_id)
+          path = os.path.join(os.path.dirname(__file__), 'add_place.html')
+          template_values = dict(place=place.place, user=place.user) 
+          self.response.out.write(template.render(path, template_values))
+      else:     #send back to choose_place.html
+          path = os.path.join(os.path.dirname(__file__), 'choose_place.html')
+          template_values = dict()
+          self.response.out.write(template.render(path, template_values))
+                    
         
 class MainPage(webapp.RequestHandler):
     def get(self):
@@ -37,11 +53,10 @@ class MainPage(webapp.RequestHandler):
         else:
             ####go to map.html
             ####because choose_place.html has produced a desired place name
-            user = users.get_current_user()
-            path = os.path.join(os.path.dirname(__file__), 'map.html')
             key = db.Key.from_path("Group", place_id)
             place = Group.get(key)
             if place : 
+                path = os.path.join(os.path.dirname(__file__), 'map.html')
                 template_values = dict(place_id=place.key(), place=place.place, 
                                     people=place.people, center_lat=place.center_lat, 
                                     center_lng=place.center_lng, map_zoom=place.zoom,
@@ -51,20 +66,7 @@ class MainPage(webapp.RequestHandler):
                 self.response.out.write(template.render(path, template_values))
             #if place does not already exist
             else:
-                if user:    #send to add_place.html
-                    place= Group(key_name=place_id)
-                    place.place = place_id
-                    place.user = user
-                    place.put()
-                    key = db.Key.from_path("Group", place_id)
-                    path = os.path.join(os.path.dirname(__file__), 'add_place.html')
-                    template_values = dict(place=place.place, user=place.user) 
-                    self.response.out.write(template.render(path, template_values))
-                else:     #send back to choose_place.html
-                    path = os.path.join(os.path.dirname(__file__), 'choose_place.html')
-                    template_values = dict()
-                    self.response.out.write(template.render(path, template_values))
-                    
+                db.run_in_transaction(make_new_map,place_id,self)
 
 class Details(webapp.RequestHandler):
     def get(self):
