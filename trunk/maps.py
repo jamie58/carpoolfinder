@@ -40,9 +40,12 @@ def make_new_map(place_id,self):
           self.response.out.write(template.render(path, template_values))
       else:     #send back to choose_place.html
           logging.info("User else %s " % user)
-          path = os.path.join(os.path.dirname(__file__), 'choose_place.html')
-          template_values = dict()
-          self.response.out.write(template.render(path, template_values))
+          #path = os.path.join(os.path.dirname(__file__), 'choose_place.html')
+          #template_values = dict()
+          #self.response.out.write(template.render(path, template_values))
+          greeting = ("<a href=\"%s\">Sign in or register</a>." %
+                  users.create_login_url("/"))
+          self.response.out.write("<html><body>%s</body></html>" % greeting)          
                     
         
 class MainPage(webapp.RequestHandler):
@@ -69,7 +72,7 @@ class MainPage(webapp.RequestHandler):
                 self.response.out.write(template.render(path, template_values))
             #if place does not already exist
             else:
-                db.run_in_transaction(make_new_map,place_id,self)
+                make_new_map(place_id,self)
 
 class Details(webapp.RequestHandler):
     def get(self):
