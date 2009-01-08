@@ -8,5 +8,13 @@ handlers:
   static_files: static/images/favicon.ico
   upload: static/images/favicon.ico
 
+- url: /phonedial.png
+  static_files: static/images/phonedial.png
+  upload: static/images/phonedial.png
+
+- url: /add_place.*
+  script: maps.py
+  login: required
+
 - url: /.*
   script: maps.py
