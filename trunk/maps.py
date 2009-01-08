@@ -1,10 +1,10 @@
 import os
 import logging
+from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext.webapp import template
 from google.appengine.ext import db
-from google.appengine.api import users
 
 class Group(db.Model):
     date = db.DateTimeProperty(auto_now_add=True)
@@ -27,7 +27,9 @@ class Pin(db.Model):
 
 def make_new_map(place_id,self):
       user = users.get_current_user()
+      logging.info("User %s " % user)
       if user:    #send to add_place.html
+          logging.info("User if %s " % user)
           place= Group(key_name=place_id)
           place.place = place_id
           place.user = user
@@ -37,6 +39,7 @@ def make_new_map(place_id,self):
           template_values = dict(place=place.place, user=place.user) 
           self.response.out.write(template.render(path, template_values))
       else:     #send back to choose_place.html
+          logging.info("User else %s " % user)
           path = os.path.join(os.path.dirname(__file__), 'choose_place.html')
           template_values = dict()
           self.response.out.write(template.render(path, template_values))
