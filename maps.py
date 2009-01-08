@@ -1,18 +1,23 @@
 import os
+import logging
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext.webapp import template
 from google.appengine.ext import db
+from google.appengine.api import users
 
 class Group(db.Model):
     date = db.DateTimeProperty(auto_now_add=True)
     center_lat = db.FloatProperty()
     center_lng = db.FloatProperty()
+    marker_lat = db.FloatProperty()
+    marker_lng = db.FloatProperty()
     zoom = db.IntegerProperty()
     place = db.StringProperty()
     people = db.StringProperty()
     contact =  db.StringProperty()
     moreinfo =  db.StringProperty()
+    user = db.UserProperty()
     
 class Pin(db.Model):
     date = db.DateTimeProperty(auto_now_add=True)
@@ -25,33 +30,48 @@ class MainPage(webapp.RequestHandler):
     def get(self):
         place_id = self.request.get("place", None)
         if place_id is None:
-            #group = Group()
-            #group.center_lat=33.80777
-            #group.center_lng=-84.30542
-            #group.zoom=11
-            #group.people="seniors"
-            #group.place="DTC"
-            #group.contact="schott DOT bee are eye eh en AT gee em ae eye el DOT com"
-            #id=group.put()
-            #self.response.out.write("Group added " + str(id))
-            #return
+            ####'choose_place' on next line does not seem to matter
             path = os.path.join(os.path.dirname(__file__), 'choose_place.html')
             template_values = dict()
             self.response.out.write(template.render(path, template_values))
         else:
+            ####go to map.html
+            ####because choose_place.html has produced a desired place name
+            user = users.get_current_user()
             path = os.path.join(os.path.dirname(__file__), 'map.html')
-            place = Group.get(place_id)
-            template_values = dict(place_id=place.key(), place=place.place, 
-                                   people=place.people, center_lat=place.center_lat, 
-                                   center_lng=place.center_lng, map_zoom=place.zoom,
-                                   contact=place.contact, moreinfo=place.moreinfo)
-            self.response.out.write(template.render(path, template_values))
+            key = db.Key.from_path("Group", place_id)
+            place = Group.get(key)
+            if place : 
+                template_values = dict(place_id=place.key(), place=place.place, 
+                                    people=place.people, center_lat=place.center_lat, 
+                                    center_lng=place.center_lng, map_zoom=place.zoom,
+                                    marker_lat=place.marker_lat, marker_lng=place.marker_lng, 
+                                    contact=place.contact, moreinfo=place.moreinfo,
+                                    user=place.user)
+                self.response.out.write(template.render(path, template_values))
+            #if place does not already exist
+            else:
+                if user:    #send to add_place.html
+                    place= Group(key_name=place_id)
+                    place.place = place_id
+                    place.user = user
+                    place.put()
+                    key = db.Key.from_path("Group", place_id)
+                    path = os.path.join(os.path.dirname(__file__), 'add_place.html')
+                    template_values = dict(place=place.place, user=place.user) 
+                    self.response.out.write(template.render(path, template_values))
+                else:     #send back to choose_place.html
+                    path = os.path.join(os.path.dirname(__file__), 'choose_place.html')
+                    template_values = dict()
+                    self.response.out.write(template.render(path, template_values))
+                    
 
 class Details(webapp.RequestHandler):
     def get(self):
         action = self.request.get("Action", "read")
         place_id = self.request.get("place")
-        place = Group.get(place_id)
+        key = db.Key.from_path("Group", place_id)
+        place = Group.get(key)
         
         if action == "read":
             pins = db.GqlQuery("SELECT * FROM Pin where ancestor is :group LIMIT 100", group=place)
@@ -73,29 +93,30 @@ class Details(webapp.RequestHandler):
             self.response.out.write("pin deleted")
             
 class AddPlace(webapp.RequestHandler):
+    #creates group 
     def get(self):
-        path = os.path.join(os.path.dirname(__file__), 'add_place.html')
-        template_values = dict()
-        self.response.out.write(template.render(path, template_values))
-    
-    def post(self):
-        group = Group()
-        group.center_lat = float(self.request.get('center_lat')) # 33.80777
-        group.center_lng = float(self.request.get('center_lng')) # -84.30542
-        group.zoom = int(self.request.get('zoom')) # 11
-        group.people = self.request.get('people') #"seniors"
-        group.place = self.request.get('place') #"DTC"
-        group.contact = self.request.get('contact') # "schott DOT bee are eye eh en AT gee em ae eye el DOT com"
-        group.moreinfo = self.request.get('moreinfo') #""
+        place_id = self.request.get('place')
+        key = db.Key.from_path("Group", place_id)
+        group = Group.get(key)
+        group.place = place_id
+        group.center_lat = float(self.request.get('center_lat'))
+        group.center_lng = float(self.request.get('center_lng'))
+        group.zoom = int(self.request.get('zoom'))
+        group.people = self.request.get('people')
+        group.contact = self.request.get('contact')
+        group.moreinfo = self.request.get('moreinfo')
+        group.marker_lat = float(self.request.get('marker_lat'))
+        group.marker_lng = float(self.request.get('marker_lng'))
+        #this pin should NOT have a parent so it is not
+        #included in the many ancestor pins
         pin = Pin()
-        pin.lat = float(self.request.get('marker_lat')) # 33.80777
-        pin.lng = float(self.request.get('marker_lng')) # -84.30542
-        id=group.put()
-        self.redirect("/?place=%s" % id)
+        pin.name = place_id
+        pin.lat = float(self.request.get('marker_lat'))
+        pin.lng = float(self.request.get('marker_lng'))
+        pin.put()
+        group.put()
+        self.redirect("/?place=%s" % place_id)
             
-        # http://maps.google.com/maps?f=q&hl=en&geocode=&q=10+10th+street+30309&sll=34.00219,-84.476173&sspn=0.01263,0.017188&ie=UTF8&z=17&g=10+10th+street+30309&iwloc=addr
-
-        
         
 application = webapp.WSGIApplication(
                                      [('/', MainPage),

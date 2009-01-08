@@ -30,12 +30,34 @@
           <p>Third, click the "submit" button if everything looks right. If not,
           start over by reloading the page.  </p>
 
-          <p>*****More information needs to be supplied about the admin's
+          <p>
+          Presently, once you submit the pushpin bubble form, your map is
+          cast in stone and if you have made an error positioning the pin 
+          or naming your group, you must start all over and you must change
+          your group's name because it's unique wording cannot be revised. 
+          So there are a few details you may want to know.
+          </p>
+          <p>
+          If you press the "return" key while you have the pushpin bubble form
+          open, that is like pressing the "submit" button.
+          </p>
+          <p>
+          There is a "More information" input field for you to give additional
+          instructions to your group. If you want to encourage your people to
+          include their phone numbers in their information, you may want to
+          suggest that they disguise the numbers as characters using a format
+          like the one in the graphic supplied here. 
+
+          </p>
+          <img src="phonedial.png" width="127" height="141" /> 
+          <p>
+          *****More information needs to be supplied about the admin's
           tasks.*****
           </p>
-          <p><tt>schott DOT bee are eye eh en AT gee em ae eye el DOT com</tt></p>
+          <p>
+          <tt>schott DOT bee are eye eh en AT gee em ae eye el DOT com</tt></p>
         </td>
-        <td>
+        <td valign="top">
 
           <!--div id="map" style="width: 900px; height: 700px"></div-->
           <div id="map" style="width: 700px; height: 500px"></div>
@@ -63,30 +85,75 @@
     if (GBrowserIsCompatible()) {
 
       // == Display the map, with some controls and set the initial location 
+      var place_name = '{{place|addslashes}}';
+      var user_name = '{{user}}';
+      var lastmarker ;
+      var lastcenter;
+      var myEventListener;
       var map = new GMap2(document.getElementById("map"),{draggableCursor:"default"});
       map.addControl(new GLargeMapControl());
       map.setCenter(new GLatLng(24.21,-41.48), 2);
 
+      function createMarker(point){
       var markerOptions = {title:"Drag and zoom the map and reposition me, before clicking on me", draggable:true};
-      var marker = new GMarker(map.getCenter(),markerOptions);
+      var marker = new GMarker(point,markerOptions);
+      myEventListener = new GEvent.addListener(marker, "click", function() {
+          marker.openInfoWindowHtml(iwform);
+          lastmarker = marker;
+          lastcenter = map.getCenter();
+          });
+      map.addOverlay(marker);
+      lastmarker=marker;
+      lastcenter = map.getCenter();
+      return marker;
+      }
+    
+      function process(form) {
+        // == populate map data
+        map.setCenter(lastcenter, map.getZoom());
+        // form.place.value = String({{place|addslashes}});
+        var people = form.people.value;
+        var contact = form.contact.value;
+        var moreinfo = form.moreinfo.value;
+        var center_lat = parseFloat(map.getCenter().lat());
+        var center_lng = parseFloat(map.getCenter().lng());
+        var zoom = String(map.getZoom());
+        var marker_lat = parseFloat(marker.getPoint().lat());
+        var marker_lng = parseFloat(marker.getPoint().lng());
+        var url = "/add_place?place="+place_name+"&center_lat="+center_lat+"&center_lng="+center_lng+"&zoom="+zoom+"&people="+people+"&contact="+contact+"&moreinfo="+moreinfo+"&marker_lat="+marker_lat+"&marker_lng="+marker_lng;
+        // GLog.write("About to send "+url+ " to the server"); 
 
-      var myEventListener;
+        // ===== send the data to the server
+        GDownloadUrl(url, function(doc) { 
+            });  
+        marker.closeInfoWindow();
+        GEvent.removeListener(myEventListener);
 
+        alert("Your map has been created. You and your group can begin to use it at the address (URL) in your browser. BOOKMARK this page and distribute the URL to your group.");
+        return true;
+      }
+
+
+        // + '<form method="POST" onsubmit="return process(this)" action="add_place">'
 
       var iwform = 'Enter your group\'s information:<br>'
-        + '<form method="POST" onsubmit="return process(this)" action="add_place">'
+        + '<form onsubmit="process(this); return false" action="#">'
+        + 'Group Name or Initials: '
         + '<br />'
-        + 'Group Name or Initials'
-        + '  <input type="text" name="place" value="Civic Group" size="31" maxlength="31"/>'
+        + '<strong>' + place_name + '</strong>'
+        // + '<strong>{{place|escape}}</strong>'
         + '<br />'
         + 'People'
         + '  <input type="text" name="people" value="do-gooders" size="31" maxlength="31"/>'
         + '<br />'
         + 'Contact'
-        + '  <input type="text" name="contact" value="schott DOT bee are eye eh en AT gee em ae eye el DOT com" size="81" maxlength="31"/>'
+        + '  <input type="text" name="contact" value="schott DOT bee are eye eh en AT gee em ae eye el DOT com" size="31" maxlength="31"/>'
         + '<br />'
         + 'More information'
         + '  <input type="textarea" name="moreinfo"/>'
+        // + '  <input type="hidden" name="place_name" value="' +place_name+ '"/>'
+        + '  <input type="hidden" name="place_name"/>'
+        // + '  <input type="hidden" name="place_name"/>'
         + '  <input type="hidden" name="center_lat"/>'
         + '  <input type="hidden" name="center_lng"/>'
         + '  <input type="hidden" name="zoom"/>'
@@ -95,21 +162,7 @@
         + '  <input type="submit" value="Submit" />'
         + '<\/form>';
 
-      map.addOverlay(marker);
-      myEventListener = new GEvent.addListener(marker, "click", function() {
-          marker.openInfoWindowHtml(iwform);
-          });
-      function process(form) {
-        // == populate map data
-        form.center_lat.value = String(map.getCenter().lat());
-        form.center_lng.value = String(map.getCenter().lng());
-        form.zoom.value = String(map.getZoom());
-        form.marker_lat.value = String(marker.getPoint().lat());
-        form.marker_lng.value = String(marker.getPoint().lng());
-        GEvent.removeListener(myEventListener);
-
-        return true;
-      }
+      var marker = createMarker(map.getCenter());
 
         // display a warning if the browser was not compatible
       } else {
