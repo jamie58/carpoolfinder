@@ -16,5 +16,9 @@ handlers:
   script: maps.py
   login: required
 
+- url: /mapowner.*
+  script: maps.py
+  login: required
+
 - url: /.*
   script: maps.py

@@ -10,6 +10,6 @@ indexes:
 # automatically uploaded to the admin console when you next deploy
 # your application using appcfg.py.
 
-# Used 17 times in query history.
+# Used 18 times in query history.
 - kind: Pin
   ancestor: yes
