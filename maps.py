@@ -34,15 +34,12 @@ def make_new_map(place_id,self):
           place.place = place_id
           place.user = user
           place.put()
-          key = db.Key.from_path("Group", place_id)
+          #key = db.Key.from_path("Group", place_id)
           path = os.path.join(os.path.dirname(__file__), 'add_place.html')
           template_values = dict(place=place.place, user=place.user) 
           self.response.out.write(template.render(path, template_values))
       else:     #send back to choose_place.html
           logging.info("User else %s " % user)
-          #path = os.path.join(os.path.dirname(__file__), 'choose_place.html')
-          #template_values = dict()
-          #self.response.out.write(template.render(path, template_values))
           greeting = ("<a href=\"%s\">Sign in or register</a>." %
                   users.create_login_url("/"))
           self.response.out.write("<html><body>%s</body></html>" % greeting)          
@@ -62,17 +59,57 @@ class MainPage(webapp.RequestHandler):
             key = db.Key.from_path("Group", place_id)
             place = Group.get(key)
             if place : 
-                path = os.path.join(os.path.dirname(__file__), 'map.html')
+                user = users.get_current_user()
+                #place= Group(key_name=place_id)
                 template_values = dict(place_id=place.key(), place=place.place, 
-                                    people=place.people, center_lat=place.center_lat, 
-                                    center_lng=place.center_lng, map_zoom=place.zoom,
-                                    marker_lat=place.marker_lat, marker_lng=place.marker_lng, 
-                                    contact=place.contact, moreinfo=place.moreinfo,
-                                    user=place.user)
+                         people=place.people, center_lat=place.center_lat, 
+                         center_lng=place.center_lng, map_zoom=place.zoom,
+                         marker_lat=place.marker_lat, marker_lng=place.marker_lng, 
+                         contact=place.contact, moreinfo=place.moreinfo,
+                         user=place.user)
+                if user and user == place.user: #send user to add_place.html
+                    logging.info("User if %s " % user)
+                    path = os.path.join(os.path.dirname(__file__), 'add_place.html')
+                else:                           #send to map.html
+                    path = os.path.join(os.path.dirname(__file__), 'map.html')
                 self.response.out.write(template.render(path, template_values))
             #if place does not already exist
             else:
                 make_new_map(place_id,self)
+
+class OwnerMap(webapp.RequestHandler):
+    def get(self):
+        place_id = self.request.get("place", None)
+        logging.info("OwnerMap %s " % place_id)
+        if place_id is None:
+            ####'choose_place' on next line does not seem to matter
+            path = os.path.join(os.path.dirname(__file__), 'choose_place.html')
+            template_values = dict()
+            self.response.out.write(template.render(path, template_values))
+        else:
+            ####go to map.html
+            ####because choose_place.html has produced a desired place name
+            key = db.Key.from_path("Group", place_id)
+            place = Group.get(key)
+            if place : 
+                #place= Group(key_name=place_id)
+                user = users.get_current_user()
+                logging.info("OwnerMap user %s " % user)
+                logging.info("OwnerMap place.user %s " % place.user)
+                if user and user == place.user: #send user to map.html
+                    logging.info("User if %s " % user)
+                    template_values = dict(place_id=place.key(), place=place.place, 
+                         people=place.people, center_lat=place.center_lat, 
+                         center_lng=place.center_lng, map_zoom=place.zoom,
+                         marker_lat=place.marker_lat, marker_lng=place.marker_lng, 
+                         contact=place.contact, moreinfo=place.moreinfo,
+                         user=place.user)
+                    path = os.path.join(os.path.dirname(__file__), 'mapowner.html')
+                else:                           #send to map.html
+                    template_values = dict()
+                    path = os.path.join(os.path.dirname(__file__), 'choose_place')
+                self.response.out.write(template.render(path, template_values))
+
 
 class Details(webapp.RequestHandler):
     def get(self):
@@ -129,7 +166,8 @@ class AddPlace(webapp.RequestHandler):
 application = webapp.WSGIApplication(
                                      [('/', MainPage),
                                       ('/details.txt', Details),
-                                      ('/add_place', AddPlace)],
+                                      ('/add_place', AddPlace),
+                                      ('/mapowner', OwnerMap)],
                                      debug=True)
 
                                      
