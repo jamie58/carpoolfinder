@@ -94,6 +94,8 @@
       var lastmarker ;
       var lastcenter;
       var myEventListener;
+      // var zoom = {{map_zoom}};
+      // alert(zoom);
       var map = new GMap2(document.getElementById("map"),{draggableCursor:"default"});
       map.addControl(new GLargeMapControl());
       map.setCenter(new GLatLng(24.21,-41.48), 2);
@@ -164,10 +166,10 @@
         + '  <input type="text" name="people" value="{{people}}" id="idinput" size="31" maxlength="31"/>'
         + '<br />'
         + 'Contact'
-        + '  <input type="text" name="contact" value="{{contact}}" size="31" maxlength="31"/>'
+        + '  <input type="text" name="contact" value="{{contact}}" size="31" maxlength="91"/>'
         + '<br />'
         + 'More information'
-        + '  <input type="textarea" name="moreinfo" value="{{moreinfo}}"/>'
+        + '  <input type="textarea" name="moreinfo" value="{{moreinfo}}" size="31" maxlength="91"/>'
         // + '  <input type="hidden" name="place_name" value="' +place_name+ '"/>'
         + '  <input type="hidden" name="place_name"/>'
         // + '  <input type="hidden" name="place_name"/>'
