@@ -59,12 +59,12 @@
           </p>
           <p>
           <tt>schott DOT bee are eye eh en AT gee em ae eye el DOT com</tt></p>
-          <a href="/mapowner?place={{place}}">Alter your map page now or later</a>
         </td>
         <td valign="top">
 
           <!--div id="map" style="width: 900px; height: 700px"></div-->
           <div id="map" style="width: 700px; height: 500px"></div>
+          <a href="/mapowner?place={{place}}">Alter your map page now or later</a>
           <!--a href="store.htm">Back to the tutorial page</a-->
 
 
@@ -94,11 +94,29 @@
       var lastmarker ;
       var lastcenter;
       var myEventListener;
-      // var zoom = {{map_zoom}};
-      // alert(zoom);
+      var zoom = '{{map_zoom}}';
+      var persons       = '{{ people }}';
+      var map_lat       = '{{ center_lat}}';
+      var map_lng       = '{{ center_lng}}';
+      var pin_lat       = '{{ marker_lat}}';
+      var pin_lng       = '{{ marker_lng}}';
+      var group_contact = '{{ contact }}';
+      var group_info    = '{{ moreinfo }}';
+      var pin_title     = '{{ place }}';
+
+      if ('{{people}}'     == '')  {persons = 'do-gooders';}
+      if ('{{contact}}'    == '')  {group_contact = 'schott DOT bee are eye eh en AT gee em ae eye el DOT com';}
+      if ('{{map_zoom}}'   == -999){zoom = 2;}
+      if ('{{center_lat}}' == -999){map_lat = 24.21;}
+      if ('{{center_lng}}' == -999){map_lng =-41.48;}
+      if ('{{marker_lat}}' == -999){pin_lat = 24.21;}
+      if ('{{marker_lng}}' == -999){pin_lng =-41.48;}
+      zoom = parseInt(zoom)
+      var start = new GLatLng(parseFloat(map_lat),parseFloat(map_lng));
+      var startpin = new GLatLng(parseFloat(pin_lat),parseFloat(pin_lng));
       var map = new GMap2(document.getElementById("map"),{draggableCursor:"default"});
       map.addControl(new GLargeMapControl());
-      map.setCenter(new GLatLng(24.21,-41.48), 2);
+      map.setCenter(start , zoom);
 
       function createMarker(point){
       var markerOptions = {title:"Drag and zoom the map and reposition me, before clicking on me", draggable:true};
@@ -130,7 +148,6 @@
       function process(form) {
         // == populate map data
         map.setCenter(lastcenter, map.getZoom());
-        // form.place.value = String({{place|addslashes}});
         var people = form.people.value;
         var contact = form.contact.value;
         var moreinfo = form.moreinfo.value;
@@ -153,26 +170,22 @@
       }
 
 
-        // + '<form method="POST" onsubmit="return process(this)" action="add_place">'
 
       var iwform = 'Enter your group\'s information:<br>'
         + '<form onsubmit="process(this); return false" action="#">'
         + 'Group Name or Initials: '
         + '<br />'
         + '<strong>' + place_name + '</strong>'
-        // + '<strong>{{place|escape}}</strong>'
         + '<br />'
         + 'People'
-        + '  <input type="text" name="people" value="{{people}}" id="idinput" size="31" maxlength="31"/>'
+        + '  <input type="text" name="people" value="' +persons+ '" id="idinput" size="31" maxlength="31"/>'
         + '<br />'
         + 'Contact'
-        + '  <input type="text" name="contact" value="{{contact}}" size="31" maxlength="91"/>'
+        + '  <input type="text" name="contact" value="' +group_contact+ '" size="31" maxlength="91"/>'
         + '<br />'
         + 'More information'
-        + '  <input type="textarea" name="moreinfo" value="{{moreinfo}}" size="31" maxlength="91"/>'
-        // + '  <input type="hidden" name="place_name" value="' +place_name+ '"/>'
+        + '  <input type="textarea" name="moreinfo" value="' +group_info+ '" size="31" maxlength="291"/>'
         + '  <input type="hidden" name="place_name"/>'
-        // + '  <input type="hidden" name="place_name"/>'
         + '  <input type="hidden" name="center_lat"/>'
         + '  <input type="hidden" name="center_lng"/>'
         + '  <input type="hidden" name="zoom"/>'
@@ -181,7 +194,7 @@
         + '  <input type="submit" value="Submit" />'
         + '<\/form>';
 
-      var marker = createMarker(map.getCenter());
+      var marker = createMarker(startpin);
 
         // display a warning if the browser was not compatible
       } else {

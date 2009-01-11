@@ -27,16 +27,37 @@ class Pin(db.Model):
 
 def make_new_map(place_id,self):
       user = users.get_current_user()
-      logging.info("User %s " % user)
+      logging.info("Make_new User %s " % user)
       if user:    #send to add_place.html
-          logging.info("User if %s " % user)
+          logging.info("Make_new User if %s " % user)
           place= Group(key_name=place_id)
           place.place = place_id
           place.user = user
+          place.people = ""
+          place.center_lat = float(-999)
+          place.center_lng = float(-999)
+          place.zoom = int(-999)
+          place.marker_lat = float(-999)
+          place.marker_lng = float(-999)
+          place.contact = ""
+          place.moreinfo = ""
           place.put()
-          #key = db.Key.from_path("Group", place_id)
+          pin = Pin(key_name=place_id)
+          pin.name = place_id
+          #pin.lat = float(self.request.get('marker_lat'))
+          #pin.lng = float(self.request.get('marker_lng'))
+          pin.put()
+          #greeting = ("<a href=\"%s\">Sign out</a>." %
+          #        users.create_logout_url("/"))
+          #self.response.out.write("<html><body>%s</body></html>" % greeting)          
           path = os.path.join(os.path.dirname(__file__), 'add_place.html')
           template_values = dict(place=place.place, user=place.user) 
+          template_values = dict(place_id=place.key(), place=place.place, 
+                   people=place.people, center_lat=place.center_lat, 
+                   center_lng=place.center_lng, map_zoom=place.zoom,
+                   marker_lat=place.marker_lat, marker_lng=place.marker_lng, 
+                   contact=place.contact, moreinfo=place.moreinfo,
+                   user=place.user)
           self.response.out.write(template.render(path, template_values))
       else:     #send back to choose_place.html
           logging.info("User else %s " % user)
@@ -60,7 +81,6 @@ class MainPage(webapp.RequestHandler):
             place = Group.get(key)
             if place : 
                 user = users.get_current_user()
-                #place= Group(key_name=place_id)
                 template_values = dict(place_id=place.key(), place=place.place, 
                          people=place.people, center_lat=place.center_lat, 
                          center_lng=place.center_lng, map_zoom=place.zoom,
@@ -69,6 +89,8 @@ class MainPage(webapp.RequestHandler):
                          user=place.user)
                 if user and user == place.user: #send user to add_place.html
                     logging.info("User if %s " % user)
+                    logging.info("center_lat %s " % place.center_lat )
+                    logging.info("marker_lat %s " % place.marker_lat )
                     path = os.path.join(os.path.dirname(__file__), 'add_place.html')
                 else:                           #send to map.html
                     path = os.path.join(os.path.dirname(__file__), 'map.html')
@@ -92,7 +114,6 @@ class OwnerMap(webapp.RequestHandler):
             key = db.Key.from_path("Group", place_id)
             place = Group.get(key)
             if place : 
-                #place= Group(key_name=place_id)
                 user = users.get_current_user()
                 logging.info("OwnerMap user %s " % user)
                 logging.info("OwnerMap place.user %s " % place.user)
@@ -154,7 +175,8 @@ class AddPlace(webapp.RequestHandler):
         group.marker_lng = float(self.request.get('marker_lng'))
         #this pin should NOT have a parent so it is not
         #included in the many ancestor pins
-        pin = Pin()
+        key = db.Key.from_path("Pin", place_id)
+        pin = Pin.get(key)
         pin.name = place_id
         pin.lat = float(self.request.get('marker_lat'))
         pin.lng = float(self.request.get('marker_lng'))
