@@ -64,7 +64,7 @@
 
           <!--div id="map" style="width: 900px; height: 700px"></div-->
           <div id="map" style="width: 700px; height: 500px"></div>
-          <a href="/mapowner?place={{place}}">Alter your map page now or later</a>
+          <a href="/mapowner?place={{place}}">Add or delete pins on your map page now or later</a>
           <!--a href="store.htm">Back to the tutorial page</a-->
 
 
@@ -101,11 +101,14 @@
       var pin_lat       = '{{ marker_lat}}';
       var pin_lng       = '{{ marker_lng}}';
       var group_contact = '{{ contact }}';
+      var group_activity = '{{ activity }}';
       var group_info    = '{{ moreinfo }}';
       var pin_title     = '{{ place }}';
 
       if ('{{people}}'     == '')  {persons = 'do-gooders';}
       if ('{{contact}}'    == '')  {group_contact = 'schott DOT bee are eye eh en AT gee em ae eye el DOT com';}
+      if ('{{moreinfo}}'    == '')  {group_info = 'This is important';}
+      if ('{{activity}}'    == '')  {group_activity = 'live';}
       if ('{{map_zoom}}'   == -999){zoom = 2;}
       if ('{{center_lat}}' == -999){map_lat = 24.21;}
       if ('{{center_lng}}' == -999){map_lng =-41.48;}
@@ -151,12 +154,13 @@
         var people = form.people.value;
         var contact = form.contact.value;
         var moreinfo = form.moreinfo.value;
+        var activity = form.activity.value;
         var center_lat = parseFloat(map.getCenter().lat());
         var center_lng = parseFloat(map.getCenter().lng());
         var zoom = String(map.getZoom());
         var marker_lat = parseFloat(marker.getPoint().lat());
         var marker_lng = parseFloat(marker.getPoint().lng());
-        var url = "/add_place?place="+place_name+"&center_lat="+center_lat+"&center_lng="+center_lng+"&zoom="+zoom+"&people="+people+"&contact="+contact+"&moreinfo="+moreinfo+"&marker_lat="+marker_lat+"&marker_lng="+marker_lng;
+        var url = "/add_place?place="+place_name+"&center_lat="+center_lat+"&center_lng="+center_lng+"&zoom="+zoom+"&people="+people+"&contact="+contact+"&moreinfo="+moreinfo+"&activity="+activity+"&marker_lat="+marker_lat+"&marker_lng="+marker_lng;
         // GLog.write("About to send "+url+ " to the server"); 
 
         // ===== send the data to the server
@@ -179,6 +183,9 @@
         + '<br />'
         + 'People'
         + '  <input type="text" name="people" value="' +persons+ '" id="idinput" size="31" maxlength="31"/>'
+        + '<br />'
+        + 'Activity'
+        + '  <input type="text" name="activity" value="' +group_activity+ '" id="idinput" size="31" maxlength="31"/>'
         + '<br />'
         + 'Contact'
         + '  <input type="text" name="contact" value="' +group_contact+ '" size="31" maxlength="91"/>'
