@@ -11,5 +11,23 @@ indexes:
 # your application using appcfg.py.
 
 # Used once in query history.
+- kind: Group
+  properties:
+  - name: date
+    direction: desc
+
+# Used 6 times in query history.
+- kind: Group
+  properties:
+  - name: name
+    direction: desc
+
+# Used 28 times in query history.
+- kind: Pin
+  properties:
+  - name: name
+    direction: desc
+
+# Used 29 times in query history.
 - kind: Pin
   ancestor: yes

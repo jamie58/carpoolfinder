@@ -18,7 +18,7 @@ class Group(db.Model):
     people = db.StringProperty()
     contact =  db.StringProperty()
     moreinfo =  db.StringProperty()
-    activity =  db.StringProperty()
+    activity =  db.StringProperty(default='live')
     user = db.UserProperty()
     
 class Pin(db.Model):
@@ -26,16 +26,16 @@ class Pin(db.Model):
     lat = db.FloatProperty()
     lng = db.FloatProperty()
     name = db.StringProperty()
-    cornerColor	 = db.StringProperty()
-    height = db.IntegerProperty()
-    label = db.StringProperty()
-    labelColor = db.StringProperty()
-    labelSize = db.IntegerProperty()
-    primaryColor = db.StringProperty()
-    shadowColor = db.StringProperty()
-    shape = db.StringProperty()
-    strokeColor = db.StringProperty()
-    width = db.IntegerProperty()
+    cornerColor	 = db.StringProperty(default='ffffff')
+    height = db.IntegerProperty(default=32)
+    label = db.StringProperty(default='')
+    labelColor = db.StringProperty(default='000000')
+    labelSize = db.IntegerProperty(default=2)
+    primaryColor = db.StringProperty(default='ff0000')
+    shadowColor = db.StringProperty(default='000000')
+    shape = db.StringProperty(default='circle')
+    strokeColor = db.StringProperty(default='000000')
+    width = db.IntegerProperty(default=32)
 
         
 class MainPage(webapp.RequestHandler):
@@ -134,8 +134,7 @@ class Details(webapp.RequestHandler):
                 sPinage = "%s" % pinage
                 self.response.out.write("\t".join( (str(pin.key()),
                   pin.date.strftime('%a %m %d %Y %H%M'), str(pin.lat),
-                  str(pin.lng), pin.name, str(pin.primaryColor), pin.label,
-                  sPinage) ) )
+                  str(pin.lng), pin.name, str(pin.primaryColor), pin.label, sPinage) ) )
                 logging.info("Activity time %s " % pinage)
                 cnt += 1
                 self.response.out.write("\n")
@@ -181,13 +180,6 @@ class AddPlace(webapp.RequestHandler):
         self.redirect("/?place=%s" % place_id)
             
         
-application = webapp.WSGIApplication(
-                                     [('/', MainPage),
-                                      ('/details.txt', Details),
-                                      ('/add_place', AddPlace),
-                                      ('/mapowner', OwnerMap)],
-                                     debug=True)
-
                                      
                                      
 def make_new_map(place_id,self):
@@ -225,6 +217,13 @@ def make_new_map(place_id,self):
           greeting = ("<a href=\"%s\">Sign in or register</a>." %
                   users.create_login_url("/"))
           self.response.out.write("<html><body>%s</body></html>" % greeting)          
+application = webapp.WSGIApplication(
+                                     [('/', MainPage),
+                                      ('/details.txt', Details),
+                                      ('/add_place', AddPlace),
+                                      ('/mapowner', OwnerMap)],
+                                     debug=True)
+
                     
 def main():
     run_wsgi_app(application)
