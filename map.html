@@ -92,7 +92,10 @@
           <td style="background:#FF0; color:#000; font-family:monospace;">#FFFF00</td>
         </tr>
       </table>      
-    </table>
+    </table> <br /> <br />
+    </p>
+          <img src="phonedial.png" width="127" height="141" /> 
+    <p>
     <noscript><b>JavaScript must be enabled in order for you to use Google Maps.</b> 
       However, it seems JavaScript is either disabled or not supported by your browser. 
       To view Google Maps, enable JavaScript by changing your browser options, and then 
@@ -214,7 +217,7 @@
         // == remove the input marker and replace it with a completed marker
         map.closeInfoWindow();
         map.removeOverlay(lastmarker);
-        var marker = createMarker(lastmarker.getPoint(),details,ID,color,label,pinage);
+        var marker = createMarker(lastmarker.getPoint(),details,ID,color,label,0);
         alert("Your information has been processed. You may hover over pushpins to see who others are.");
 
       }
