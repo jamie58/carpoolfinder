@@ -95,26 +95,20 @@
       var lastcenter;
       var myEventListener;
       var zoom = '{{map_zoom}}';
-      var persons       = '{{ people }}';
       var map_lat       = '{{ center_lat}}';
       var map_lng       = '{{ center_lng}}';
       var pin_lat       = '{{ marker_lat}}';
       var pin_lng       = '{{ marker_lng}}';
       var group_contact = '{{ contact }}';
-      var group_activity = '{{ activity }}';
-      var group_info    = '{{ moreinfo }}';
       var pin_title     = '{{ place }}';
 
-      if ('{{people}}'     == '')  {persons = 'do-gooders';}
       if ('{{contact}}'    == '')  {group_contact = 'schott DOT bee are eye eh en AT gee em ae eye el DOT com';}
-      if ('{{moreinfo}}'    == '')  {group_info = 'This is important';}
-      if ('{{activity}}'    == '')  {group_activity = 'live';}
       if ('{{map_zoom}}'   == -999){zoom = 2;}
       if ('{{center_lat}}' == -999){map_lat = 24.21;}
       if ('{{center_lng}}' == -999){map_lng =-41.48;}
       if ('{{marker_lat}}' == -999){pin_lat = 24.21;}
       if ('{{marker_lng}}' == -999){pin_lng =-41.48;}
-      zoom = parseInt(zoom)
+      zoom = parseFloat(zoom);
       var start = new GLatLng(parseFloat(map_lat),parseFloat(map_lng));
       var startpin = new GLatLng(parseFloat(pin_lat),parseFloat(pin_lng));
       var map = new GMap2(document.getElementById("map"),{draggableCursor:"default"});
@@ -182,16 +176,18 @@
         + '<strong>' + place_name + '</strong>'
         + '<br />'
         + 'People'
-        + '  <input type="text" name="people" value="' +persons+ '" id="idinput" size="31" maxlength="31"/>'
+        // + '  <input type="text" name="people" value="' +persons+ '" id="idinput" size="31" maxlength="31"/>'
+        + '  <input type="text" name="people" value="{{ people|default:"do-gooders"}}" id="idinput" size="31" maxlength="31"/>'
         + '<br />'
         + 'Activity'
-        + '  <input type="text" name="activity" value="' +group_activity+ '" id="idinput" size="31" maxlength="31"/>'
+        // + '  <input type="text" name="activity" value="' +group_activity+ '" id="idinput" size="31" maxlength="31"/>'
+        + '  <input type="text" name="activity"}}" id="idinput" size="31" maxlength="31"/>'
         + '<br />'
         + 'Contact'
         + '  <input type="text" name="contact" value="' +group_contact+ '" size="31" maxlength="91"/>'
         + '<br />'
         + 'More information'
-        + '  <input type="textarea" name="moreinfo" value="' +group_info+ '" size="31" maxlength="291"/>'
+        + '  <input type="textarea" name="moreinfo" value="{{ moreinfo|default:"This is important"}}" size="31" maxlength="291"/>'
         + '  <input type="hidden" name="place_name"/>'
         + '  <input type="hidden" name="center_lat"/>'
         + '  <input type="hidden" name="center_lng"/>'

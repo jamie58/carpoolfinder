@@ -5,6 +5,7 @@
     <title>Map pushpins for {{place|escape}} {{people|escape}}</title>
     <script
       src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=ABQIAAAAK66Qp-URZDoyIK3CA-TFxxSEpqyB52ri6CozCxC1N-C0Lqi2RRQJSmyqPLmyCHafqqVoApbOZ8Zjew" type="text/javascript"></script>
+    <script src="mapiconmaker.js" type="text/javascript"></script>
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
     <link rel="icon" href="favicon.ico" type="image/x-icon">
   </head>
@@ -16,13 +17,15 @@
       <tr><td>
           <p>First, click on the map where you live. You can drag your pushpin or
           the map around before you complete the third step.</p>
-          <p>Second, in the supplied bubble, fill in your first name (and maybe your initial).</p>
+          <p>Second, in the supplied bubble, fill in your first name (and maybe your initial).<font color="blue">*</font></p>
           <p>Third, click the "submit" button if everything looks right. If not,
           start over by reloading the page.  </p>
 
           <p>Now you are ready to explore the pushpins: roll your mouse slowly over existing pushpins
           and you will see where others live and may be able to rideshare.  
           You may remove your pushpin by right-clicking on it.</p>
+          <!--p>*Colors are entered as RedGreenBlue hexadecimal pairs. 
+          For example Yellow is ffff00; Green, 008000; White, ffffff.</p-->
           <p><tt>{{contact}}</tt></p>
           <p><strong>{{moreinfo|escape}}</strong></p>
 
@@ -37,6 +40,58 @@
 
         </td>
       </tr>
+      <table>
+        <tr>
+          <th><font color="blue">*</font>Color</th>
+          <th>Hexadecimal</th>
+          <th>Color</th>
+          <th>Hexadecimal</th>
+          <th>Color</th>
+          <th>Hexadecimal</th>
+          <th>Color</th>
+          <th>Hexadecimal</th>
+        </tr>
+        <tr>
+          <td>aqua</td>
+          <td style="background:#0FF; color:#000; font-family:monospace;">#00FFFF</td>
+          <td>gray</td>
+          <td style="background:#808080; color:#FFF; font-family:monospace;">#808080</td>
+          <td>navy</td>
+          <td style="background:#000080; color:#FFF; font-family:monospace;">#000080</td>
+          <td>silver</td>
+          <td style="background:#C0C0C0; color:#000; font-family:monospace;">#C0C0C0</td>
+        </tr>
+        <tr>
+          <td>black</td>
+          <td style="background:#000; color:#FFF; font-family:monospace;">#000000</td>
+          <td>green</td>
+          <td style="background:#008000; color:#FFF; font-family:monospace;">#008000</td>
+          <td>olive</td>
+          <td style="background:#808000; color:#FFF; font-family:monospace;">#808000</td>
+          <td>teal</td>
+          <td style="background:#008080; color:#fff; font-family:monospace;">#008080</td>
+        </tr>
+        <tr>
+          <td>blue</td>
+          <td style="background:#00F; color:#FFF; font-family:monospace;">#0000FF</td>
+          <td>lime</td>
+          <td style="background:#0F0; color:#000; font-family:monospace;">#00FF00</td>
+          <td>purple</td>
+          <td style="background:#800080; color:#FFF; font-family:monospace;">#800080</td>
+          <td>white</td>
+          <td style="background:#FFF; color:#000; font-family:monospace;">#FFFFFF</td>
+        </tr>
+        <tr>
+          <td>fuchsia</td>
+          <td style="background:#F0F; color:#000; font-family:monospace;">#FF00FF</td>
+          <td>maroon</td>
+          <td style="background:#800000; color:#FFF; font-family:monospace;">#800000</td>
+          <td>red</td>
+          <td style="background:#F00; color:#FFF; font-family:monospace;">#FF0000</td>
+          <td>yellow</td>
+          <td style="background:#FF0; color:#000; font-family:monospace;">#FFFF00</td>
+        </tr>
+      </table>      
     </table>
     <noscript><b>JavaScript must be enabled in order for you to use Google Maps.</b> 
       However, it seems JavaScript is either disabled or not supported by your browser. 
@@ -63,9 +118,11 @@
       var markerDetails;
       var myEventListener;
       var myEventMapListener;
-      var iwform = 'Enter your name:<br>'
+      var iwform = 'Enter your name:<br />'
         + '<form onsubmit="process(this); return false" action="#">'
-        + '  <input type="text" name="data" id="idinput" size="31" maxlength="31"/>'
+        + '  <input type="text" name="data" id="idinput" size="31" maxlength="31" tabindex="1"/>'
+        + '<br />  Enter your pin label:  <input type="text" value="{{ label }}"  name="label" size="3" maxlength="3" tabindex="2"/>'
+        + '<br />  Enter your pin color:  <input type="text" value="{{ color|default:"ff0000"}}"  name="color" size="6" maxlength="6" tabindex="3"/>'
         + '  <input type="submit" value="Submit" />'
         + '<\/form>';
 
@@ -76,7 +133,7 @@
             clearInterval( interval );
             callback( element );
             }
-            }, 20 );
+            }, 10 );
       }
 
       // == creates a draggable marker with an input form ==
@@ -103,42 +160,25 @@
         }
       }
 
-      // == removes a normal marker with an input form ==
-      function processdel(form) {
-        // == obtain the data
-        var url = "details.txt?Action=del&ID=" +markerID+"&place={{place}}";
-        // GLog.write("About to send "+url+ " to the server"); 
-
-        // ===== send the data to the server
-        GDownloadUrl(url, function(doc) {    });  
-
-        // == remove the input marker and replace it with a completed marker
-        map.closeInfoWindow();
-        map.removeOverlay(lastmarker);
-        GEvent.removeListener(myEventListener);
-        GEvent.removeListener(myEventMapListener);
-        alert("Your pushpin has been removed.");
-
-      }
-
       // == creates a "normal" marker
-      function createMarker(point,text,ID) { 
-        markerOptions = {title:text};
+      function createMarker(point,text,ID,color,label,pinage) { 
+        var stroke = "000000"
+          if (pinage > middleage){
+            stroke = "888888";
+          }
+        if (pinage > middleage){
+          stroke = "ffffff";
+        }
+        var newIcon = MapIconMaker.createLabeledMarkerIcon({width: 32, height: 32, primaryColor: color, cornerColor: color, strokeColor: stroke, label: label});
+        markerOptions = {title:text , icon: newIcon};
         var marker = new GMarker(point,markerOptions);
         marker.ID = ID;
-        myEventMapListener = new GEvent.addListener(map, "singlerightclick", function(a,b,overlay) {
-            if(overlay){
-            if(overlay instanceof GMarker){
-            GEvent.trigger(overlay,"SingleRightClick");
-            }
-            }
-            });
         myEventListener = new GEvent.addListener(marker, "SingleRightClick", function() {
             if(!noMoreDel){
             markerID = marker.ID;
             markerDetails = text;
 
-            var delform = text + '<br>'
+            var delform = text + '<br />'
             + '<form onsubmit="processdel(this); return false" action="#">'
             + '  <input type="submit" id="delid" value="Delete" />'
             + '<\/form>';
@@ -152,46 +192,48 @@
             }
             });
         map.addOverlay(marker);
+        lastmarker=marker;
         return marker;
       }
-
-      // == Display the map, with some controls and set the initial location 
-      var map = new GMap2(document.getElementById("map"),{draggableCursor:"default"});
-      map.addControl(new GLargeMapControl());
-      var start = new GLatLng({{center_lat}},{{center_lng}});
-      var marker_start = new GLatLng({{marker_lat}},{{marker_lng}});
-      name = "{{place|addslashes}}";
-      map.setCenter(start,{{map_zoom}});
-      var startmarker = new GMarker(marker_start,{draggable:true, autoPan:false, title:name});
-      map.addOverlay(startmarker);
-      startmarker.setImage("http://maps.google.com/mapfiles/dd-end.png");
-
-      // == Listen for map click and add an input marker
-      GEvent.addListener(map,"click",function(overlay,point){
-          if (!overlay) {
-          createInputMarker(point,0);
-          }
-          });
 
       function process(form) {
         // == obtain the data
         var ID = myArray.length + 1;
         var details = form.data.value;
+        var color = form.color.value;
+        var label = form.label.value;
         var lat = lastmarker.getPoint().lat();
         var lng = lastmarker.getPoint().lng();
-        var url = "details.txt?Action=add&ID=" +ID+ "&lat=" +lat+ "&lng=" +lng+ "&details="+details+"&place={{place}}";
+        var url = "details.txt?Action=add&ID=" +ID+ "&lat=" +lat+ "&lng=" +lng+ "&details="+details+"&primaryColor="+color+"&label="+label+"&place={{place}}";
         //GLog.write("About to send "+url+ " to the server"); 
 
         // ===== send the data to the server
         GDownloadUrl(url, function(doc) { 
-            var marker = createMarker(lastmarker.getPoint(),details,doc);
             });  
 
         // == remove the input marker and replace it with a completed marker
         map.closeInfoWindow();
         map.removeOverlay(lastmarker);
-        // GEvent.trigger(marker,"click");
+        var marker = createMarker(lastmarker.getPoint(),details,ID,color,label,pinage);
         alert("Your information has been processed. You may hover over pushpins to see who others are.");
+
+      }
+
+      // == removes a normal marker with an input form ==
+      function processdel(form) {
+        // == obtain the data
+        var url = "details.txt?Action=del&ID=" +markerID+"&place={{place}}";
+        // GLog.write("About to send "+url+ " to the server"); 
+
+        // ===== send the data to the server
+        GDownloadUrl(url, function(doc) {    });  
+
+        // == remove the input marker 
+        map.closeInfoWindow();
+        map.removeOverlay(lastmarker);
+        GEvent.removeListener(myEventListener);
+        GEvent.removeListener(myEventMapListener);
+        alert("Your pushpin has been removed.");
 
       }
 
@@ -207,10 +249,11 @@
             var lat = parseFloat(parts[2]);
             var lng = parseFloat(parts[3]);
             var details = parts[4];
+            var color = parts[5];
+            var label = parts[6];
             var point = new GLatLng(lat,lng);
-            myArray[i] = new Array(lat,lng,details,point,ID);
-            // create the marker
-            // var marker = createMarker(point,details,ID);
+            var pinage = parts[7];
+            myArray[i] = new Array(lat,lng,details,point,ID,color,label,pinage);
           }
         }
         // create the marker
@@ -220,15 +263,47 @@
           var adetails = myArray[j][2];
           var apoint = myArray[j][3];
           var ID = myArray[j][4];
+          var acolor = myArray[j][5];
+          var alabel = myArray[j][6];
+          var apinage = myArray[j][7];
           if(!isNaN(alat+alng)){
             // create the marker
-            var marker = createMarker(apoint,adetails,ID);
+            var marker = createMarker(apoint,adetails,ID,acolor,alabel,apinage);
           }
         }
       }          
+
+
+      // == Display the map, with some controls and set the initial location 
+      var map = new GMap2(document.getElementById("map"),{draggableCursor:"default"});
+      map.addControl(new GLargeMapControl());
+      var start = new GLatLng({{center_lat}},{{center_lng}});
+      var marker_start = new GLatLng({{marker_lat}},{{marker_lng}});
+      name = "{{place|addslashes}}";
+      map.setCenter(start,{{map_zoom}});
+      var startmarker = new GMarker(marker_start,{draggable:true, autoPan:false, title:name});
+      map.addOverlay(startmarker);
+      startmarker.setImage("http://maps.google.com/mapfiles/dd-end.png");
+      var middleage =  7;
+      var oldage    = 30;
+
+      // == Listen for map click and add an input marker
+      GEvent.addListener(map,"click",function(overlay,point){
+          if (!overlay) {
+          createInputMarker(point,0);
+          }
+          });
+
       // === read data entered by previous users ===
       GDownloadUrl("details.txt?place={{place}}", readData);      
 
+      myEventMapListener = new GEvent.addListener(map, "singlerightclick", function(a,b,overlay) {
+          if(overlay){
+          if(overlay instanceof GMarker){
+          GEvent.trigger(overlay,"SingleRightClick");
+          }
+          }
+          });
     }
 
 // display a warning if the browser was not compatible
