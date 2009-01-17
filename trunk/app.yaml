@@ -12,6 +12,10 @@ handlers:
   static_files: static/images/phonedial.png
   upload: static/images/phonedial.png
 
+- url: /mapiconmaker.js
+  static_files: static/javascript/mapiconmaker.js
+  upload: static/javascript/mapiconmaker.js
+
 - url: /add_place.*
   script: maps.py
   login: required

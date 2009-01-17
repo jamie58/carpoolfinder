@@ -1,5 +1,6 @@
 import os
 import logging
+from datetime import datetime
 from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
@@ -17,7 +18,7 @@ class Group(db.Model):
     people = db.StringProperty()
     contact =  db.StringProperty()
     moreinfo =  db.StringProperty()
-    activity =  db.StringProperty(default="live")
+    activity =  db.StringProperty()
     user = db.UserProperty()
     
 class Pin(db.Model):
@@ -25,6 +26,16 @@ class Pin(db.Model):
     lat = db.FloatProperty()
     lng = db.FloatProperty()
     name = db.StringProperty()
+    cornerColor	 = db.StringProperty()
+    height = db.IntegerProperty()
+    label = db.StringProperty()
+    labelColor = db.StringProperty()
+    labelSize = db.IntegerProperty()
+    primaryColor = db.StringProperty()
+    shadowColor = db.StringProperty()
+    shape = db.StringProperty()
+    strokeColor = db.StringProperty()
+    width = db.IntegerProperty()
 
         
 class MainPage(webapp.RequestHandler):
@@ -62,10 +73,8 @@ class MainPage(webapp.RequestHandler):
                          marker_lat=place.marker_lat, marker_lng=place.marker_lng, 
                          contact=place.contact, moreinfo=place.moreinfo,
                          activity=place.activity, user=place.user)
+                logging.info("place.place %s " % place.place)
                 if user and user == place.user: #send user to add_place.html
-                    logging.info("User if %s " % user)
-                    logging.info("center_lat %s " % place.center_lat )
-                    logging.info("marker_lat %s " % place.marker_lat )
                     path = os.path.join(os.path.dirname(__file__), 'add_place.html')
                 else:                           #send to map.html
                     path = os.path.join(os.path.dirname(__file__), 'map.html')
@@ -93,7 +102,6 @@ class OwnerMap(webapp.RequestHandler):
                 logging.info("OwnerMap user %s " % user)
                 logging.info("OwnerMap place.user %s " % place.user)
                 if user and user == place.user: #send user to mapowner.html
-                    logging.info("User if %s " % user)
                     template_values = dict(place_id=place.key(), place=place.place, 
                          people=place.people, center_lat=place.center_lat, 
                          center_lng=place.center_lng, map_zoom=place.zoom,
@@ -106,7 +114,6 @@ class OwnerMap(webapp.RequestHandler):
                     path = os.path.join(os.path.dirname(__file__), 'choose_place')
                 self.response.out.write(template.render(path, template_values))
 
-
 class Details(webapp.RequestHandler):
     def get(self):
         action = self.request.get("Action", "read")
@@ -117,8 +124,19 @@ class Details(webapp.RequestHandler):
         if action == "read":
             pins = db.GqlQuery("SELECT * FROM Pin where ancestor is :group LIMIT 100", group=place)
             cnt = 1
+            pinage = 0
+            time = datetime.now()
+            ord = time.toordinal()
             for pin in pins:
-                self.response.out.write("\t".join( (str(pin.key()), pin.date.strftime('%a %m %d %Y %H%M'), str(pin.lat), str(pin.lng), pin.name) ) )
+                pintime= pin.date
+                pinord = pintime.toordinal()
+                pinage = ord - pinord
+                sPinage = "%s" % pinage
+                self.response.out.write("\t".join( (str(pin.key()),
+                  pin.date.strftime('%a %m %d %Y %H%M'), str(pin.lat),
+                  str(pin.lng), pin.name, str(pin.primaryColor), pin.label,
+                  sPinage) ) )
+                logging.info("Activity time %s " % pinage)
                 cnt += 1
                 self.response.out.write("\n")
         elif action == "add":
@@ -126,6 +144,8 @@ class Details(webapp.RequestHandler):
             pin.name = self.request.get('details')
             pin.lat = float(self.request.get('lat'))
             pin.lng = float(self.request.get('lng'))
+            pin.primaryColor = self.request.get('primaryColor')
+            pin.label = self.request.get('label')
             new_id = pin.put()
             self.response.out.write(new_id)
         elif action == "del":
