@@ -1,4 +1,6 @@
 import os
+from os import environ
+import captcha
 import logging
 from datetime import datetime
 from google.appengine.api import users
@@ -6,6 +8,16 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext.webapp import template
 from google.appengine.ext import db
+
+PAGESIZE = 10
+
+class Comment(db.Model):
+  comment = db.StringProperty()
+  name =  db.StringProperty()
+  category = db.StringProperty()
+  pinlabel =  db.StringProperty()
+  when =  db.StringProperty()
+  created = db.DateTimeProperty(auto_now_add=True)
 
 class Group(db.Model):
     date = db.DateTimeProperty(auto_now_add=True)
@@ -114,6 +126,71 @@ class OwnerMap(webapp.RequestHandler):
                     path = os.path.join(os.path.dirname(__file__), 'choose_place')
                 self.response.out.write(template.render(path, template_values))
 
+def whenfromcreated(created):
+    return created.isoformat()[0:19] 
+    
+class CommentHandler(webapp.RequestHandler):
+  def get(self):
+    logging.info("Get ")
+    bookmark = self.request.get("bookmark")
+    next = None
+    if bookmark:
+      query = Comment.gql('WHERE when <= :bookmark ORDER BY when DESC', 
+        bookmark=bookmark)      
+      comments = query.fetch(PAGESIZE+1)      
+    else:
+      comments = Comment.gql('ORDER BY when DESC').fetch(PAGESIZE+1)
+    if len(comments) == PAGESIZE+1:
+      next = comments[-1].when
+      comments = comments[:PAGESIZE]
+  
+    chtml = captcha.displayhtml(
+      public_key = "6LduxwQAAAAAAPYWf4El7VvMucyolt6GLbv1Fmpe",
+      use_ssl = False,
+      error = None)
+
+    
+    template_values = {'next': next, 'comments': comments, 'captchahtml':
+        chtml}    
+    #template_values = {'next': next}   # to initialize use this one 
+    template_file = os.path.join(os.path.dirname(__file__), 'comment.html')
+    self.response.out.write(template.render(template_file, template_values))
+
+  def post(self):
+    challenge = self.request.get('recaptcha_challenge_field')
+    response  = self.request.get('recaptcha_response_field')
+    remoteip  = self.request.remote_addr 
+
+    cResponse = captcha.submit(
+                challenge,
+                response,
+                "secretkey",
+                remoteip)
+    if cResponse.is_valid:
+    
+        logging.info("Post")
+        now = datetime.now()
+        logging.info("Activity now %s " % now)
+        when = whenfromcreated(now)
+        logging.info("Activity when %s " % when)
+        s = Comment(
+          comment = self.request.get('comment'), 
+          category = self.request.get('category'), 
+          name = self.request.get('name'), 
+          pinlabel = self.request.get('pinlabel'),
+          when = when,
+          created = now) 
+        s.put()
+        self.redirect('/comment')
+    else:
+        chtml = captcha.displayhtml(
+          public_key = "6LdsxwQAAAAAAHA0AOoHfIR8RuMTQWhn_x2-BSlL",
+          use_ssl = False,
+          error = cResponse.error_code)        
+        self.response.out.write("An error occurred with the reCaptcha")
+        self.redirect('/comment')        
+    
+    
 class Details(webapp.RequestHandler):
     def get(self):
         action = self.request.get("Action", "read")
@@ -204,7 +281,6 @@ def make_new_map(place_id,self):
           pin.name = place_id
           pin.put()
           path = os.path.join(os.path.dirname(__file__), 'add_place.html')
-          template_values = dict(place=place.place, user=place.user) 
           template_values = dict(place_id=place.key(), place=place.place, 
                    people=place.people, center_lat=place.center_lat, 
                    center_lng=place.center_lng, map_zoom=place.zoom,
@@ -221,7 +297,8 @@ application = webapp.WSGIApplication(
                                      [('/', MainPage),
                                       ('/details.txt', Details),
                                       ('/add_place', AddPlace),
-                                      ('/mapowner', OwnerMap)],
+                                      ('/mapowner', OwnerMap),
+                                      ('/comment', CommentHandler)],
                                      debug=True)
 
                     

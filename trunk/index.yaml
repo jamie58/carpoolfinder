@@ -11,23 +11,35 @@ indexes:
 # your application using appcfg.py.
 
 # Used once in query history.
+- kind: Comment
+  properties:
+  - name: when
+    direction: desc
+
+# Unused in query history -- copied from input.
+- kind: Domment
+  properties:
+  - name: when
+    direction: desc
+
+# Unused in query history -- copied from input.
 - kind: Group
   properties:
   - name: date
     direction: desc
 
-# Used 6 times in query history.
+# Unused in query history -- copied from input.
 - kind: Group
   properties:
   - name: name
     direction: desc
 
-# Used 28 times in query history.
+# Unused in query history -- copied from input.
 - kind: Pin
   properties:
   - name: name
     direction: desc
 
-# Used 29 times in query history.
+# Unused in query history -- copied from input.
 - kind: Pin
   ancestor: yes
