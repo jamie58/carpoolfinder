@@ -1,0 +1,43 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> <!DOCTYPE HTML>
+<html>
+  <head>
+    <title> Comments </title>
+  </head>
+  <body>
+
+    <table border="1" cellp adding="5" cellspacing="0" class="sortable" id="unique-id" >
+      <tr> 
+        <td width="70%">Comment</td>
+        <td width="10%">Name</td>
+        <td width="09%">Date</td>
+        <td width="09%">Category </td>
+        <td  width="02%">Pin label</td>
+      </tr>
+    {% for s in comments %}        
+    <tr>
+      <td>{{ s.comment|escape }}</td>
+      <td> {{s.name|escape}}</td>
+      <td> {{s.created}}</td>
+      <td> {{s.category|escape}} </td>
+      <td> {{s.pinlabel|escape}}</td>
+    </tr> 
+    {% endfor %}
+    </table>
+
+    {% if next %}
+      <p><a href="/comment?bookmark={{ next }}">Next</a></p>        
+    {% endif %}
+        
+
+    <form action="/comment" method="Post">
+      <label>Comment: <input type="text" name="comment" value="" />
+      <label>Name: <input type="text" name="name" value="" />
+      <label>Category: <input type="text" name="category" value="" />
+      <label>Pinlabel: <input type="text" name="pinlabel" value="" />
+      <p>{{ captchahtml }}<input type="submit" value="Add" /></p>
+      
+    </form>
+
+
+  </body>
+</html> 
